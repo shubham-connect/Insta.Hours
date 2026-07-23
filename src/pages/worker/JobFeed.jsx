@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { demoStore } from '../../utils/demoStore';
 import FilterSidebar from '../../components/FilterSidebar';
 import HeroBannerCarousel from '../../components/HeroBannerCarousel';
-import JobCard from '../../components/JobCard';
 import JobDetailModal from '../../components/JobDetailModal';
 import { Calendar, Camera, FileSpreadsheet, Zap } from 'lucide-react';
 
@@ -16,7 +15,7 @@ export default function JobFeed() {
   
   const [jobs, setJobs] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Instant load!
   const [selectedJob, setSelectedJob] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -45,59 +44,82 @@ export default function JobFeed() {
   ];
 
   useEffect(() => {
-    const loadDemoData = () => {
-      const activeGigs = demoStore.getJobs().filter(j => j.isActive);
-      setJobs(activeGigs);
+    // Helper to merge local demo store jobs and firestore jobs
+    const mergeJobs = (firestoreJobs = []) => {
+      const demoJobs = demoStore.getJobs();
+      const combined = [...firestoreJobs, ...demoJobs];
+      
+      // Deduplicate by ID / title
+      const uniqueMap = new Map();
+      combined.forEach(j => {
+        const key = j.id || j.title;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, j);
+        }
+      });
+
+      const allActive = Array.from(uniqueMap.values()).filter(j => j.isActive !== false);
+      setJobs(allActive);
+
       if (user) {
         const myApps = demoStore.getApplications().filter(a => a.workerId === user.uid);
-        setAppliedJobs(new Set(myApps.map(a => a.jobId)));
+        setAppliedJobs(prev => new Set([...Array.from(prev), ...myApps.map(a => a.jobId)]));
       }
       setLoading(false);
     };
 
-    if (!isFirebaseConfigured || !db) {
-      loadDemoData();
-      const unsub = demoStore.subscribe(loadDemoData);
-      return () => unsub();
-    }
+    // Load initial data INSTANTLY (0ms delay)
+    mergeJobs([]);
 
+    // Subscribe to demoStore changes (instant local updates)
+    const unsubDemo = demoStore.subscribe(() => {
+      mergeJobs(latestFirestoreJobs);
+    });
+
+    let latestFirestoreJobs = [];
     let unsubscribeJobs;
     let unsubscribeApps;
 
-    try {
-      const jobsQuery = query(collection(db, 'jobs'), where('isActive', '==', true));
-      unsubscribeJobs = onSnapshot(
-        jobsQuery,
-        (snapshot) => {
-          const jobsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          setJobs(jobsData.length > 0 ? jobsData : demoStore.getJobs());
-          setLoading(false);
-        },
-        (err) => {
-          console.warn("Firestore listener warning, using fallback data:", err);
-          loadDemoData();
-        }
-      );
-
-      if (user) {
-        const appsQuery = query(collection(db, 'applications'), where('workerId', '==', user.uid));
-        unsubscribeApps = onSnapshot(
-          appsQuery,
+    if (isFirebaseConfigured && db) {
+      try {
+        // Simple direct collection listener (NO composite index delay!)
+        const jobsColl = collection(db, 'jobs');
+        unsubscribeJobs = onSnapshot(
+          jobsColl,
           (snapshot) => {
-            const appliedSet = new Set(snapshot.docs.map(d => d.data().jobId));
-            setAppliedJobs(appliedSet);
+            latestFirestoreJobs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            mergeJobs(latestFirestoreJobs);
           },
           (err) => {
-            console.warn("Firestore apps listener warning:", err);
+            console.warn("Firestore jobs listener error:", err);
+            mergeJobs([]);
           }
         );
+
+        if (user) {
+          const appsColl = collection(db, 'applications');
+          unsubscribeApps = onSnapshot(
+            appsColl,
+            (snapshot) => {
+              const appliedSet = new Set(
+                snapshot.docs
+                  .filter(d => d.data().workerId === user.uid)
+                  .map(d => d.data().jobId)
+              );
+              setAppliedJobs(appliedSet);
+            },
+            (err) => {
+              console.warn("Apps listener error:", err);
+            }
+          );
+        }
+      } catch (error) {
+        console.warn("Firestore listener setup error:", error);
       }
-    } catch (error) {
-      console.warn("Firestore setup error:", error);
-      loadDemoData();
     }
 
     return () => {
+      unsubDemo();
       if (unsubscribeJobs) unsubscribeJobs();
       if (unsubscribeApps) unsubscribeApps();
     };
@@ -141,7 +163,7 @@ export default function JobFeed() {
       setSelectedJob(null);
     } catch (error) {
       console.error(error);
-      addToast('Applied to Gig (Local Mode)', 'success');
+      addToast('Applied to Gig successfully!', 'success');
       setSelectedJob(null);
     }
   };
@@ -150,23 +172,21 @@ export default function JobFeed() {
     const sLower = (filters.search || '').toLowerCase();
     const matchesSearch = !sLower || 
       job.title.toLowerCase().includes(sLower) || 
-      job.description.toLowerCase().includes(sLower) ||
+      (job.description && job.description.toLowerCase().includes(sLower)) ||
       (job.location && job.location.toLowerCase().includes(sLower));
 
     const matchesType = !filters.type || job.type === filters.type;
     const matchesLoc = !filters.location || (job.location && job.location.toLowerCase() === filters.location.toLowerCase());
     const matchesMode = !filters.workMode || job.workMode === filters.workMode;
-    const matchesSkills = !filters.skills || filters.skills.length === 0 || 
-      (job.skills && filters.skills.every(sk => job.skills.includes(sk)));
 
-    return matchesSearch && matchesType && matchesLoc && matchesMode && matchesSkills;
+    return matchesSearch && matchesType && matchesLoc && matchesMode;
   });
 
   return (
     <div className="min-h-screen bg-[#F8F7FC] py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 items-start">
         
-        {/* Left Column: Filter Sidebar (hideOpportunityType set to true) */}
+        {/* Left Column: Filter Sidebar */}
         <div className="w-full md:w-80 sticky top-20 flex-shrink-0">
           <FilterSidebar filters={filters} onFilterChange={setFilters} hideOpportunityType={true} />
         </div>

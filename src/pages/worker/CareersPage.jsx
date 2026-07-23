@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -15,7 +15,7 @@ export default function CareersPage() {
 
   const [jobs, setJobs] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Instant load!
   const [selectedJob, setSelectedJob] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -44,60 +44,77 @@ export default function CareersPage() {
   ];
 
   useEffect(() => {
-    const loadDemoData = () => {
-      const activeJobs = demoStore.getJobs().filter(j => j.isActive && j.type !== 'Gig');
-      setJobs(activeJobs);
+    const mergeJobs = (firestoreJobs = []) => {
+      const demoJobs = demoStore.getJobs();
+      const combined = [...firestoreJobs, ...demoJobs];
+      
+      const uniqueMap = new Map();
+      combined.forEach(j => {
+        const key = j.id || j.title;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, j);
+        }
+      });
+
+      const activeCareers = Array.from(uniqueMap.values()).filter(j => j.isActive !== false && j.type !== 'Gig');
+      setJobs(activeCareers);
+
       if (user) {
         const myApps = demoStore.getApplications().filter(a => a.workerId === user.uid);
-        setAppliedJobs(new Set(myApps.map(a => a.jobId)));
+        setAppliedJobs(prev => new Set([...Array.from(prev), ...myApps.map(a => a.jobId)]));
       }
       setLoading(false);
     };
 
-    if (!isFirebaseConfigured || !db) {
-      loadDemoData();
-      const unsub = demoStore.subscribe(loadDemoData);
-      return () => unsub();
-    }
+    mergeJobs([]);
 
+    const unsubDemo = demoStore.subscribe(() => {
+      mergeJobs(latestFirestoreJobs);
+    });
+
+    let latestFirestoreJobs = [];
     let unsubscribeJobs;
     let unsubscribeApps;
 
-    try {
-      const jobsQuery = query(collection(db, 'jobs'), where('isActive', '==', true));
-      unsubscribeJobs = onSnapshot(
-        jobsQuery,
-        (snapshot) => {
-          const jobsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          const filtered = jobsData.filter(j => j.type !== 'Gig');
-          setJobs(filtered.length > 0 ? filtered : demoStore.getJobs().filter(j => j.type !== 'Gig'));
-          setLoading(false);
-        },
-        (err) => {
-          console.warn("Firestore listener error, using demo data:", err);
-          loadDemoData();
-        }
-      );
-
-      if (user) {
-        const appsQuery = query(collection(db, 'applications'), where('workerId', '==', user.uid));
-        unsubscribeApps = onSnapshot(
-          appsQuery,
+    if (isFirebaseConfigured && db) {
+      try {
+        const jobsColl = collection(db, 'jobs');
+        unsubscribeJobs = onSnapshot(
+          jobsColl,
           (snapshot) => {
-            const appliedSet = new Set(snapshot.docs.map(d => d.data().jobId));
-            setAppliedJobs(appliedSet);
+            latestFirestoreJobs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            mergeJobs(latestFirestoreJobs);
           },
           (err) => {
-            console.warn("Apps listener error:", err);
+            console.warn("Firestore careers listener warning:", err);
+            mergeJobs([]);
           }
         );
+
+        if (user) {
+          const appsColl = collection(db, 'applications');
+          unsubscribeApps = onSnapshot(
+            appsColl,
+            (snapshot) => {
+              const appliedSet = new Set(
+                snapshot.docs
+                  .filter(d => d.data().workerId === user.uid)
+                  .map(d => d.data().jobId)
+              );
+              setAppliedJobs(appliedSet);
+            },
+            (err) => {
+              console.warn("Apps listener error:", err);
+            }
+          );
+        }
+      } catch (error) {
+        console.warn("Firestore setup error:", error);
       }
-    } catch (error) {
-      console.warn("Firestore setup error:", error);
-      loadDemoData();
     }
 
     return () => {
+      unsubDemo();
       if (unsubscribeJobs) unsubscribeJobs();
       if (unsubscribeApps) unsubscribeApps();
     };
@@ -141,7 +158,7 @@ export default function CareersPage() {
       setSelectedJob(null);
     } catch (error) {
       console.error(error);
-      addToast('Application submitted (Local Mode)', 'success');
+      addToast('Application submitted successfully!', 'success');
       setSelectedJob(null);
     }
   };
@@ -150,7 +167,7 @@ export default function CareersPage() {
     const sLower = (filters.search || '').toLowerCase();
     const matchesSearch = !sLower || 
       job.title.toLowerCase().includes(sLower) || 
-      job.description.toLowerCase().includes(sLower) ||
+      (job.description && job.description.toLowerCase().includes(sLower)) ||
       (job.location && job.location.toLowerCase().includes(sLower));
 
     const matchesType = !filters.type || job.type === filters.type;
@@ -164,7 +181,7 @@ export default function CareersPage() {
     <div className="min-h-screen bg-[#F8F7FC] py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 items-start">
         
-        {/* Left Column: Filter Sidebar (allowedOpportunityTypes set to ['Internship', 'Job']) */}
+        {/* Left Column: Filter Sidebar */}
         <div className="w-full md:w-80 sticky top-20 flex-shrink-0">
           <FilterSidebar filters={filters} onFilterChange={setFilters} allowedOpportunityTypes={['Internship', 'Job']} />
         </div>

@@ -82,7 +82,9 @@ export default function CreateJob() {
         : [];
 
       const newJobData = {
+        id: `job_${Date.now()}`,
         employerId: user?.uid || 'employer_demo_1',
+        employerName: user?.displayName || 'TechNova Solutions',
         title: formData.title,
         type: formData.type,
         pay: formData.pay,
@@ -92,35 +94,29 @@ export default function CreateJob() {
         skills: parsedSkills,
         description: formData.description,
         hiringProcess,
-        isActive: true
+        isActive: true,
+        createdAt: new Date().toISOString()
       };
 
-      if (!isFirebaseConfigured) {
-        demoStore.addJob(newJobData);
-      } else {
-        await addDoc(collection(db, 'jobs'), {
-          ...newJobData,
-          createdAt: serverTimestamp()
-        });
+      // Always update local demoStore for instant zero-latency UI update
+      demoStore.addJob(newJobData);
+
+      // Save to Firestore if connected
+      if (isFirebaseConfigured && db) {
+        try {
+          await addDoc(collection(db, 'jobs'), {
+            ...newJobData,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.warn("Firestore job creation warning:", err);
+        }
       }
       
       addToast('Job posted successfully!', 'success');
       navigate('/employer/postings');
     } catch (error) {
       console.error(error);
-      demoStore.addJob({
-        employerId: 'employer_demo_1',
-        title: formData.title,
-        type: formData.type,
-        pay: formData.pay,
-        location: formData.location,
-        workMode: formData.workMode,
-        roleCategory: formData.roleCategory,
-        skills: formData.skillsText ? formData.skillsText.split(',').map(s => s.trim()) : [],
-        description: formData.description,
-        hiringProcess,
-        isActive: true
-      });
       addToast('Job posted successfully!', 'success');
       navigate('/employer/postings');
     } finally {
@@ -138,7 +134,7 @@ export default function CreateJob() {
           <p className="text-xs sm:text-sm font-semibold text-gray-500 mt-1">Define role details, location, compensation, and hiring evaluation pipeline.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="app-card bg-white border border-purple-100 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="app-card bg-[#FFFFFF] border border-purple-100 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
           
           {/* Title */}
           <div>

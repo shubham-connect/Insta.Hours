@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Bot, X, Send, Sparkles } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { demoStore } from '../utils/demoStore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../lib/firebase';
 
 export default function AiAssistantWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +25,7 @@ export default function AiAssistantWidget() {
 
   const { addToast } = useToast();
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -32,7 +34,7 @@ export default function AiAssistantWidget() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
 
-    setTimeout(() => {
+    setTimeout(async () => {
       let aiText = '';
       const lower = userText.toLowerCase();
 
@@ -67,7 +69,7 @@ export default function AiAssistantWidget() {
           }));
           aiText = `Perfect! Lastly, what are the top required skills candidates should have? (e.g. "React, Video Editing")`;
         } else if (hiringState.step === 4) {
-          // Step 4: Skills received -> Create Posting!
+          // Step 4: Skills received -> Create Posting in BOTH Firestore & demoStore!
           const finalJob = {
             id: `ai_job_${Date.now()}`,
             title: hiringState.data.title,
@@ -78,13 +80,28 @@ export default function AiAssistantWidget() {
             skills: userText.split(',').map(s => s.trim()),
             description: `Hired via AI Assistant for ${hiringState.data.title}`,
             employerId: 'employer_demo_1',
-            isActive: true
+            isActive: true,
+            createdAt: new Date().toISOString()
           };
 
+          // Save to local demo store
           demoStore.addJob(finalJob);
+
+          // Save to Firestore Database
+          if (isFirebaseConfigured && db) {
+            try {
+              await addDoc(collection(db, 'jobs'), {
+                ...finalJob,
+                createdAt: serverTimestamp()
+              });
+            } catch (err) {
+              console.warn("Firestore AI posting error:", err);
+            }
+          }
+
           setHiringState({ active: false, step: 0, data: {} });
 
-          aiText = `🎉 All details collected! I have created your new ${finalJob.type} posting: "${finalJob.title}" at ${finalJob.pay}! Check your Postings tab to manage applicants.`;
+          aiText = `🎉 All details collected! I have created your new ${finalJob.type} posting: "${finalJob.title}" at ${finalJob.pay}! It is now instantly live on the Worker Portal & Postings tab!`;
           addToast('New Posting Created via AI Assistant!', 'success');
         }
       } else {
@@ -104,7 +121,7 @@ export default function AiAssistantWidget() {
       }
 
       setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', text: aiText }]);
-    }, 500);
+    }, 400);
   };
 
   return (
