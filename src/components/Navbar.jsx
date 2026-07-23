@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Zap, Briefcase, Award, Activity, User, Bell, LogOut, ChevronDown } from 'lucide-react';
+import { Zap, Briefcase, Award, Activity, User, Bell, LogOut, CreditCard, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isFirebaseConfigured, db } from '../lib/firebase';
 import { demoStore } from '../utils/demoStore';
@@ -54,9 +54,11 @@ const Navbar = () => {
   ];
 
   const employerNavLinks = [
-    { path: '/employer', label: 'Dashboard', icon: Briefcase },
-    { path: '/employer/postings', label: 'My Postings', icon: Briefcase },
-    { path: '/employer/candidates', label: 'Candidates', icon: User }
+    { path: '/employer', label: 'Home', icon: Briefcase },
+    { path: '/employer/postings', label: 'Postings', icon: Briefcase },
+    { path: '/employer/candidates', label: 'Candidates', icon: User },
+    { path: '/employer/billing', label: 'Billing', icon: CreditCard },
+    { path: '/employer/profile', label: 'Profile', icon: Building2 }
   ];
 
   const navLinks = role === 'employer' ? employerNavLinks : workerNavLinks;
@@ -75,7 +77,7 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Center Section: Top Navigation Links ONLY */}
+        {/* Center Section: Top Navigation Links */}
         <div className="flex items-center gap-6 md:gap-8">
           {user && navLinks.map((link) => {
             const Icon = link.icon;
@@ -98,11 +100,10 @@ const Navbar = () => {
           })}
         </div>
 
-        {/* Right Section: Bell Notification + Profile Dropdown ONLY (No role switcher) */}
+        {/* Right Section: Bell Notification + Profile Dropdown */}
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              {/* Bell Icon Notification */}
               <div className="relative">
                 <button
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -122,13 +123,12 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Profile Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-md focus:outline-none ring-2 ring-purple-100"
                 >
-                  {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                  {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'E'}
                 </button>
 
                 {isProfileOpen && (
@@ -136,11 +136,11 @@ const Navbar = () => {
                     <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
                     <div className="absolute right-0 mt-2 w-52 bg-white border border-purple-100 rounded-2xl shadow-xl py-2 z-50 animate-scale-in">
                       <div className="px-4 py-2 border-b border-purple-50">
-                        <p className="text-sm font-bold text-gray-900 truncate">{userProfile?.name || 'User'}</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">{userProfile?.name || 'TechNova'}</p>
                         <p className="text-xs text-purple-600 font-semibold capitalize">{role} Portal</p>
                       </div>
                       <Link
-                        to={role === 'worker' ? '/profile' : '/employer'}
+                        to={role === 'worker' ? '/profile' : '/employer/profile'}
                         onClick={() => setIsProfileOpen(false)}
                         className="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-purple-50 flex items-center gap-2"
                       >
