@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
@@ -7,6 +7,7 @@ const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
 let app = null;
 let authInstance = null;
 let dbInstance = null;
+let googleProviderInstance = null;
 let isConfigured = false;
 
 if (apiKey && !apiKey.startsWith('demo-') && apiKey !== 'YOUR_API_KEY') {
@@ -23,6 +24,7 @@ if (apiKey && !apiKey.startsWith('demo-') && apiKey !== 'YOUR_API_KEY') {
     app = initializeApp(firebaseConfig);
     authInstance = getAuth(app);
     dbInstance = getFirestore(app);
+    googleProviderInstance = new GoogleAuthProvider();
     isConfigured = true;
   } catch (error) {
     console.warn('Firebase failed to initialize with provided env. Falling back to Demo Mode.', error);
@@ -33,4 +35,5 @@ if (apiKey && !apiKey.startsWith('demo-') && apiKey !== 'YOUR_API_KEY') {
 
 export const auth = authInstance;
 export const db = dbInstance;
+export const googleProvider = googleProviderInstance;
 export const isFirebaseConfigured = isConfigured;

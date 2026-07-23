@@ -25,6 +25,7 @@ export default function JobFeed() {
     location: null,
     workMode: null,
     roleCategory: null,
+    payout: null,
     skills: []
   });
 
@@ -112,7 +113,6 @@ export default function JobFeed() {
         return newSet;
       });
 
-      // Always apply in demo store for instant local reactivity
       demoStore.applyForJob(jobId, uid);
 
       if (isFirebaseConfigured && db) {
@@ -147,23 +147,15 @@ export default function JobFeed() {
   };
 
   const filteredGigs = jobs.filter(job => {
-    // 1. Keyword search
     const sLower = (filters.search || '').toLowerCase();
     const matchesSearch = !sLower || 
       job.title.toLowerCase().includes(sLower) || 
       job.description.toLowerCase().includes(sLower) ||
       (job.location && job.location.toLowerCase().includes(sLower));
 
-    // 2. Type
     const matchesType = !filters.type || job.type === filters.type;
-
-    // 3. Location
     const matchesLoc = !filters.location || (job.location && job.location.toLowerCase() === filters.location.toLowerCase());
-
-    // 4. Work Mode
     const matchesMode = !filters.workMode || job.workMode === filters.workMode;
-
-    // 5. Skills
     const matchesSkills = !filters.skills || filters.skills.length === 0 || 
       (job.skills && filters.skills.every(sk => job.skills.includes(sk)));
 
@@ -174,18 +166,16 @@ export default function JobFeed() {
     <div className="min-h-screen bg-[#F8F7FC] py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 items-start">
         
-        {/* Left Column: Filter Sidebar */}
+        {/* Left Column: Filter Sidebar (hideOpportunityType set to true) */}
         <div className="w-full md:w-80 sticky top-20 flex-shrink-0">
-          <FilterSidebar filters={filters} onFilterChange={setFilters} />
+          <FilterSidebar filters={filters} onFilterChange={setFilters} hideOpportunityType={true} />
         </div>
 
         {/* Right Column: Hero Banner + Instant Gigs List */}
         <div className="flex-1 w-full space-y-6">
           
-          {/* Top Carousel Banner */}
           <HeroBannerCarousel banners={gigBanners} />
 
-          {/* Title Header */}
           <div className="flex justify-between items-center pb-2 border-b border-purple-100">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#5B21B6]">Instant Gigs</h1>
@@ -195,7 +185,6 @@ export default function JobFeed() {
             </div>
           </div>
 
-          {/* Gig List Cards */}
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (

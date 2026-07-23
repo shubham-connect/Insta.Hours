@@ -53,10 +53,10 @@ const Navbar = () => {
     { path: '/profile', label: 'Profile', icon: User }
   ];
 
+  // ONLY 4 TABS FOR EMPLOYER (Candidates tab removed)
   const employerNavLinks = [
     { path: '/employer', label: 'Home', icon: Briefcase },
     { path: '/employer/postings', label: 'Postings', icon: Briefcase },
-    { path: '/employer/candidates', label: 'Candidates', icon: User },
     { path: '/employer/billing', label: 'Billing', icon: CreditCard },
     { path: '/employer/profile', label: 'Profile', icon: Building2 }
   ];
@@ -136,7 +136,7 @@ const Navbar = () => {
                     <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
                     <div className="absolute right-0 mt-2 w-52 bg-white border border-purple-100 rounded-2xl shadow-xl py-2 z-50 animate-scale-in">
                       <div className="px-4 py-2 border-b border-purple-50">
-                        <p className="text-sm font-bold text-gray-900 truncate">{userProfile?.name || 'TechNova'}</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">{userProfile?.name || 'TechCorp'}</p>
                         <p className="text-xs text-purple-600 font-semibold capitalize">{role} Portal</p>
                       </div>
                       <Link

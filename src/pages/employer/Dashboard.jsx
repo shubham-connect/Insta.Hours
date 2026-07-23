@@ -5,20 +5,24 @@ import { db, isFirebaseConfigured } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { demoStore } from '../../utils/demoStore';
-import { Bell, Briefcase, Users, Zap, GraduationCap, ChevronRight, ArrowRight, UserCheck, Plus, Sparkles, Award } from 'lucide-react';
+import AiAssistantWidget from '../../components/AiAssistantWidget';
+import { Bell, Briefcase, Users, Zap, GraduationCap, ChevronRight, ArrowRight, Calendar, DollarSign, UserCheck } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, userProfile } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({
-    activeJobs: 12,
-    totalApplications: 438,
+  const [metrics, setMetrics] = useState({
+    activeGigs: 5,
+    activeJobs: 4,
+    activeInternships: 3,
+    interviewsToday: 8,
+    quickHiresMonth: 24,
     outstandingBalance: 12500
   });
 
-  const [recentApplications, setRecentApplications] = useState([]);
+  const [recentPostings, setRecentPostings] = useState([]);
 
   const name = userProfile?.name || 'TechCorp Solutions';
 
@@ -28,18 +32,24 @@ export default function Dashboard() {
     const loadDemoData = () => {
       const allJobs = demoStore.getJobs();
       const myJobs = allJobs.filter(j => j.employerId === employerUid || j.employerId === 'employer_demo_1');
-      const activeCount = myJobs.filter(j => j.isActive !== false).length;
       
-      const allApps = demoStore.getApplications();
-      setStats({
-        activeJobs: activeCount || 12,
-        totalApplications: allApps.length > 0 ? allApps.length : 438,
+      const gigs = myJobs.filter(j => j.type === 'Gig' && j.isActive !== false).length;
+      const interns = myJobs.filter(j => j.type === 'Internship' && j.isActive !== false).length;
+      const fullJobs = myJobs.filter(j => (j.type === 'Job' || !j.type) && j.isActive !== false).length;
+
+      setMetrics({
+        activeGigs: gigs || 5,
+        activeJobs: fullJobs || 4,
+        activeInternships: interns || 3,
+        interviewsToday: 8,
+        quickHiresMonth: 24,
         outstandingBalance: 12500
       });
-      setRecentApplications(allApps.length > 0 ? allApps : [
-        { id: 'a1', workerName: 'Rahul Sharma', title: 'Video Editor', score: 85, status: 'Shortlisted' },
-        { id: 'a2', workerName: 'Priya Verma', title: 'Sales Executive', score: 78, status: 'Applied' },
-        { id: 'a3', workerName: 'Amit Patel', title: 'Social Media Manager', score: 92, status: 'Interview' }
+
+      setRecentPostings(myJobs.length > 0 ? myJobs : [
+        { id: 'p1', title: 'Video Editor & Reel Creator', type: 'Gig', pay: '₹500/reel', applicantCount: 12 },
+        { id: 'p2', title: 'Sales Executive', type: 'Job', pay: '₹20,000/mo', applicantCount: 45 },
+        { id: 'p3', title: 'Brand Marketing Intern', type: 'Internship', pay: '₹10,000/mo', applicantCount: 28 }
       ]);
     };
 
@@ -56,10 +66,7 @@ export default function Dashboard() {
         q,
         (snapshot) => {
           const jobsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          setStats(prev => ({
-            ...prev,
-            activeJobs: jobsData.filter(j => j.isActive !== false).length || 12
-          }));
+          setRecentPostings(jobsData.length > 0 ? jobsData : demoStore.getJobs());
         },
         (err) => {
           console.warn("Dashboard snapshot warning:", err);
@@ -79,163 +86,176 @@ export default function Dashboard() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-[#F8F7FC] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F7FC] py-8 px-4 sm:px-6 lg:px-8 relative pb-20">
+      
+      {/* Interactive AI Hiring & Support Assistant Widget */}
+      <AiAssistantWidget />
+
       {/* Wide Desktop Grid max-w-7xl */}
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Top Header Row */}
-        <div className="flex justify-between items-center pb-4 border-b border-purple-100">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#6D28D9] text-white font-black text-xl flex items-center justify-center shadow-lg shadow-purple-600/30">
+        <div className="flex justify-between items-center pb-3 border-b border-purple-100">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#6D28D9] text-white font-black text-lg flex items-center justify-center shadow-lg shadow-purple-600/30">
               TN
             </div>
             <div>
-              <h1 className="text-2xl sm:text-4xl font-black text-[#5B21B6] leading-tight flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-[#5B21B6] leading-tight flex items-center gap-2">
                 <span>👋</span> Good Morning, {name}
               </h1>
-              <p className="text-xs sm:text-sm font-semibold text-gray-500 mt-0.5">Today's Hiring Summary & Activity</p>
+              <p className="text-xs font-semibold text-gray-500 mt-0.5">Today's Hiring Summary & Metrics</p>
             </div>
           </div>
 
           <button
             onClick={() => addToast('Notifications', 'info')}
-            className="p-3 bg-white border border-purple-100 hover:bg-purple-50 rounded-2xl transition-all relative shadow-sm"
+            className="p-2.5 bg-white border border-purple-100 hover:bg-purple-50 rounded-2xl transition-all relative shadow-sm"
           >
-            <Bell className="w-6 h-6 text-purple-900" />
-            <span className="absolute top-2 right-2 w-3 h-3 bg-orange-500 rounded-full ring-2 ring-white animate-pulse" />
+            <Bell className="w-5 h-5 text-purple-900" />
+            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-orange-500 rounded-full ring-2 ring-white animate-pulse" />
           </button>
         </div>
 
-        {/* 2-Column Wide Desktop Layout (2/3 Left, 1/3 Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* 2-Column Wide Desktop Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
-          {/* Left Column (2/3 width): Main Stats & Quick Actions */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Left Column (2/3 width): 6 Alternating-Color Metric Cards + Quick Actions */}
+          <div className="lg:col-span-2 space-y-5">
             
-            {/* 2 Stat Boxes Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* 6 Equal-Sized Metric Cards Grid (Alternating Purple & Orange Theme) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               
-              {/* Card 1: Active Jobs */}
-              <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm hover:border-purple-300 transition-all">
-                <p className="text-xs font-extrabold text-gray-400 uppercase tracking-wider flex items-center gap-2 mb-2">
-                  <Briefcase className="w-4 h-4 text-purple-600" /> ACTIVE JOBS
+              {/* 1. Active Gigs (Purple) */}
+              <div className="app-card p-4 bg-white border-2 border-purple-100 rounded-2xl shadow-sm hover:border-purple-300 transition-all">
+                <p className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider flex items-center gap-1 mb-1">
+                  <Zap className="w-3.5 h-3.5 text-purple-600" /> ACTIVE GIGS
                 </p>
-                <p className="text-5xl font-black text-[#5B21B6]">
-                  {stats.activeJobs}
+                <p className="text-3xl font-black text-[#5B21B6]">
+                  {metrics.activeGigs}
                 </p>
               </div>
 
-              {/* Card 2: Applications */}
-              <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm hover:border-purple-300 transition-all">
-                <p className="text-xs font-extrabold text-gray-400 uppercase tracking-wider flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4 text-orange-500" /> APPLICATIONS
+              {/* 2. Active Jobs (Orange) */}
+              <div className="app-card p-4 bg-white border-2 border-orange-100 rounded-2xl shadow-sm hover:border-orange-300 transition-all">
+                <p className="text-[10px] font-extrabold text-orange-600 uppercase tracking-wider flex items-center gap-1 mb-1">
+                  <Briefcase className="w-3.5 h-3.5 text-orange-500" /> ACTIVE JOBS
                 </p>
-                <p className="text-5xl font-black text-[#5B21B6]">
-                  {stats.totalApplications}
+                <p className="text-3xl font-black text-[#EA580C]">
+                  {metrics.activeJobs}
                 </p>
+              </div>
+
+              {/* 3. Active Internships (Purple) */}
+              <div className="app-card p-4 bg-white border-2 border-purple-100 rounded-2xl shadow-sm hover:border-purple-300 transition-all">
+                <p className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider flex items-center gap-1 mb-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-purple-600" /> INTERNSHIPS
+                </p>
+                <p className="text-3xl font-black text-[#5B21B6]">
+                  {metrics.activeInternships}
+                </p>
+              </div>
+
+              {/* 4. Interviews Today (Orange) */}
+              <div className="app-card p-4 bg-white border-2 border-orange-100 rounded-2xl shadow-sm hover:border-orange-300 transition-all">
+                <p className="text-[10px] font-extrabold text-orange-600 uppercase tracking-wider flex items-center gap-1 mb-1">
+                  <Calendar className="w-3.5 h-3.5 text-orange-500" /> INTERVIEWS TODAY
+                </p>
+                <p className="text-3xl font-black text-[#EA580C]">
+                  {metrics.interviewsToday}
+                </p>
+              </div>
+
+              {/* 5. Quick Hires This Month (Purple) */}
+              <div className="app-card p-4 bg-white border-2 border-purple-100 rounded-2xl shadow-sm hover:border-purple-300 transition-all">
+                <p className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider flex items-center gap-1 mb-1">
+                  <UserCheck className="w-3.5 h-3.5 text-purple-600" /> HIRED THIS MONTH
+                </p>
+                <p className="text-3xl font-black text-[#5B21B6]">
+                  {metrics.quickHiresMonth}
+                </p>
+              </div>
+
+              {/* 6. Outstanding Balance (Orange Gradient) */}
+              <div 
+                onClick={() => navigate('/employer/billing')}
+                className="app-card p-4 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] flex flex-col justify-between"
+              >
+                <p className="text-[10px] font-extrabold text-orange-100 uppercase tracking-wider flex items-center gap-1">
+                  💳 BALANCE (INR)
+                </p>
+                <div className="flex items-baseline justify-between">
+                  <p className="text-2xl font-black tracking-tight">
+                    ₹{metrics.outstandingBalance.toLocaleString('en-IN')}
+                  </p>
+                  <ChevronRight className="w-5 h-5 text-white/90" />
+                </div>
               </div>
             </div>
 
-            {/* Outstanding Balance Banner */}
-            <div
-              onClick={() => navigate('/employer/billing')}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center cursor-pointer hover:shadow-2xl transition-all hover:scale-[1.01]"
-            >
-              <div>
-                <p className="text-xs font-extrabold text-orange-100 uppercase tracking-wider flex items-center gap-2">
-                  💵 OUTSTANDING BALANCE
-                </p>
-                <h2 className="text-4xl sm:text-5xl font-black tracking-tight mt-1">
-                  ₹{stats.outstandingBalance.toLocaleString('en-IN')}
-                </h2>
-              </div>
-              <ChevronRight className="w-10 h-10 text-white/90" />
-            </div>
+            {/* Quick Actions Section (Alternating Colors) */}
+            <div className="space-y-3 pt-1">
+              <h2 className="text-lg font-extrabold text-[#5B21B6]">Quick Actions</h2>
 
-            {/* Quick Actions Section */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-extrabold text-[#5B21B6]">Quick Actions</h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                
-                {/* Box 1: Post Gig */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* 1. Purple */}
                 <Link
                   to="/employer/create?type=Gig"
-                  className="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-md transition-all hover:scale-105 group"
+                  className="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm transition-all hover:scale-105 group"
                 >
-                  <Zap className="w-8 h-8 text-white mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="font-extrabold text-sm sm:text-base">Post Gig</span>
+                  <Zap className="w-6 h-6 text-white mb-1.5 group-hover:scale-110 transition-transform" />
+                  <span className="font-extrabold text-xs sm:text-sm">Post Gig</span>
                 </Link>
 
-                {/* Box 2: Post Intern */}
+                {/* 2. Orange */}
                 <Link
                   to="/employer/create?type=Internship"
-                  className="bg-gradient-to-br from-purple-600 to-violet-700 hover:from-purple-700 hover:to-violet-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-md transition-all hover:scale-105 group"
+                  className="bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm transition-all hover:scale-105 group"
                 >
-                  <GraduationCap className="w-8 h-8 text-white mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="font-extrabold text-sm sm:text-base">Post Intern</span>
+                  <GraduationCap className="w-6 h-6 text-white mb-1.5 group-hover:scale-110 transition-transform" />
+                  <span className="font-extrabold text-xs sm:text-sm">Post Intern</span>
                 </Link>
 
-                {/* Box 3: Post Job */}
+                {/* 3. Purple */}
                 <Link
                   to="/employer/create?type=Job"
-                  className="bg-gradient-to-br from-[#4C1D95] to-[#5B21B6] hover:from-[#3B1578] hover:to-[#4C1D95] text-white rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-md transition-all hover:scale-105 group"
+                  className="bg-gradient-to-br from-[#4C1D95] to-[#5B21B6] hover:from-[#3B1578] hover:to-[#4C1D95] text-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm transition-all hover:scale-105 group"
                 >
-                  <Briefcase className="w-8 h-8 text-white mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="font-extrabold text-sm sm:text-base">Post Job</span>
+                  <Briefcase className="w-6 h-6 text-white mb-1.5 group-hover:scale-110 transition-transform" />
+                  <span className="font-extrabold text-xs sm:text-sm">Post Job</span>
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Right Column (1/3 width): Recent Candidates & Hiring Hub */}
-          <div className="lg:col-span-1 space-y-6">
-            
-            {/* Recent Candidates Card */}
-            <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm space-y-4">
+          {/* Right Column (1/3 width): RECENT POSTINGS */}
+          <div className="lg:col-span-1 space-y-5">
+            <div className="app-card p-5 bg-white border border-purple-100 rounded-3xl shadow-sm space-y-4">
               <div className="flex justify-between items-center border-b border-purple-50 pb-3">
-                <h2 className="text-lg font-extrabold text-[#5B21B6]">Recent Candidates</h2>
-                <Link to="/employer/candidates" className="text-xs font-extrabold text-orange-600 hover:text-orange-700 flex items-center gap-1">
+                <h2 className="text-base font-extrabold text-[#5B21B6]">Recent Postings</h2>
+                <Link to="/employer/postings" className="text-xs font-extrabold text-orange-600 hover:text-orange-700 flex items-center gap-1">
                   View All <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
               <div className="space-y-3">
-                {recentApplications.map((app, idx) => (
-                  <div key={app.id || idx} className="p-3 bg-purple-50/50 rounded-2xl flex items-center justify-between border border-purple-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#6D28D9] text-white font-extrabold text-sm flex items-center justify-center shadow-sm">
-                        {app.workerName ? app.workerName.charAt(0) : 'R'}
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-sm text-gray-900">{app.workerName || 'Rahul Sharma'}</h4>
-                        <p className="text-xs font-semibold text-gray-500">{app.title || 'Video Editor'}</p>
-                      </div>
+                {recentPostings.slice(0, 4).map((posting, idx) => (
+                  <div 
+                    key={posting.id || idx}
+                    onClick={() => navigate('/employer/postings')}
+                    className="p-3 bg-purple-50/50 hover:bg-purple-100/50 rounded-2xl flex items-center justify-between border border-purple-100 cursor-pointer transition-all"
+                  >
+                    <div>
+                      <h4 className="font-extrabold text-xs text-gray-900 leading-snug">{posting.title}</h4>
+                      <p className="text-[10px] font-semibold text-gray-500 mt-0.5">{posting.type || 'Gig'} • {posting.pay}</p>
                     </div>
 
-                    <span className="text-[10px] font-extrabold px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full">
-                      {app.status || 'Applied'}
+                    <span className="text-[10px] font-black text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full flex-shrink-0">
+                      {posting.applicantCount || 12} Apps
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* AI Hiring Assistant Card */}
-            <div className="app-card p-6 bg-gradient-to-br from-purple-900 to-indigo-900 text-white rounded-3xl shadow-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-orange-400" />
-                <h3 className="font-extrabold text-base">InstaScore AI Match</h3>
-              </div>
-              <p className="text-xs text-purple-200 font-semibold leading-relaxed">
-                Candidates with Skill Scores above 80+ are 4x more likely to clear technical rounds.
-              </p>
-              <button
-                onClick={() => navigate('/employer/candidates')}
-                className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 font-extrabold text-xs text-white rounded-xl shadow-md transition-all"
-              >
-                Filter Top Candidates
-              </button>
             </div>
           </div>
         </div>

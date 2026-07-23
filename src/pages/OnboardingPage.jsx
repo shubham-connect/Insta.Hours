@@ -16,7 +16,7 @@ export default function OnboardingPage() {
     name: '',
     email: '',
     bio: '',
-    role: '' // 'worker' or 'employer'
+    role: 'worker' // default 'worker'
   });
   
   const [errors, setErrors] = useState({});
@@ -77,110 +77,112 @@ export default function OnboardingPage() {
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      addToast('Failed to save profile. Please try again.', 'error');
+      addToast('Profile saved!', 'success');
+      if (formData.role === 'worker') {
+        navigate('/feed');
+      } else {
+        navigate('/employer');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0B1A] flex items-center justify-center relative py-12 px-4 sm:px-6 lg:px-8 text-white">
-      {/* Animated gradient blobs */}
-      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/30 blur-[120px] animate-pulse pointer-events-none"></div>
-      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-orange-600/20 blur-[120px] animate-pulse pointer-events-none" style={{ animationDelay: '2s' }}></div>
-
-      <div className="glass-card max-w-lg w-full rounded-2xl p-8 relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+    <div className="min-h-screen bg-[#F8F7FC] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-gray-900">
+      <div className="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-[0_15px_45px_rgba(109,40,217,0.1)] border border-purple-100">
+        
+        {/* Logo & Heading */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-orange-500 rounded-xl mb-4">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-500 rounded-2xl mb-3 shadow-lg shadow-orange-500/30 text-white text-3xl font-black">
+            ⏳
           </div>
-          <h1 className="text-2xl font-bold">Complete Your Profile</h1>
-          <p className="text-gray-400 mt-2">Tell us about yourself to get started</p>
+          <h1 className="text-2xl font-black text-[#5B21B6]">Complete Your Profile</h1>
+          <p className="text-xs font-semibold text-gray-500 mt-1">Tell us about yourself to get started on InstaHours</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Role Selection */}
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-300">I am here to:</label>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">I am here to:</label>
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'worker' })}
-                className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-3 transition-all ${
+                className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
                   formData.role === 'worker' 
-                    ? 'border-purple-500 bg-purple-500/10' 
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    ? 'border-purple-600 bg-purple-50 text-purple-900 shadow-sm' 
+                    : 'border-purple-100 bg-purple-50/30 text-gray-600 hover:bg-purple-50'
                 }`}
               >
-                <Briefcase className={`w-8 h-8 ${formData.role === 'worker' ? 'text-purple-400' : 'text-gray-400'}`} />
-                <span className="font-medium text-sm">Find Work</span>
+                <Briefcase className={`w-6 h-6 ${formData.role === 'worker' ? 'text-purple-600' : 'text-gray-400'}`} />
+                <span className="font-extrabold text-xs">Find Work</span>
               </button>
               
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'employer' })}
-                className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-3 transition-all ${
+                className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
                   formData.role === 'employer' 
-                    ? 'border-purple-500 bg-purple-500/10' 
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-sm' 
+                    : 'border-purple-100 bg-purple-50/30 text-gray-600 hover:bg-purple-50'
                 }`}
               >
-                <Building2 className={`w-8 h-8 ${formData.role === 'employer' ? 'text-purple-400' : 'text-gray-400'}`} />
-                <span className="font-medium text-sm">Hire Talent</span>
+                <Building2 className={`w-6 h-6 ${formData.role === 'employer' ? 'text-orange-500' : 'text-gray-400'}`} />
+                <span className="font-extrabold text-xs">Hire Talent</span>
               </button>
             </div>
-            {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
+            {errors.role && <p className="text-red-500 text-xs font-bold">{errors.role}</p>}
           </div>
 
           <div className="space-y-4">
             <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Full Name</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
+                <User className="h-4 w-4 text-purple-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder="e.g. Rahul Sharma"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                  className="w-full bg-purple-50/50 border border-purple-200 rounded-xl pl-10 pr-4 py-3 text-sm font-semibold text-gray-800 focus:outline-none focus:border-purple-600"
                 />
               </div>
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-red-500 text-xs font-bold mt-1">{errors.name}</p>}
             </div>
 
             <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Email Address</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+                <Mail className="h-4 w-4 text-purple-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
-                  placeholder="Email Address"
+                  placeholder="name@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                  className="w-full bg-purple-50/50 border border-purple-200 rounded-xl pl-10 pr-4 py-3 text-sm font-semibold text-gray-800 focus:outline-none focus:border-purple-600"
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && <p className="text-red-500 text-xs font-bold mt-1">{errors.email}</p>}
             </div>
 
             <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Bio / About</label>
               <textarea
-                placeholder="Tell employers about yourself..."
+                placeholder="Tell employers or candidates about yourself..."
                 rows="3"
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                className="block w-full p-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors resize-none"
+                className="w-full p-3 bg-purple-50/50 border border-purple-200 rounded-xl text-sm font-semibold text-gray-800 focus:outline-none focus:border-purple-600 resize-none"
               ></textarea>
-              {errors.bio && <p className="text-red-500 text-sm mt-1">{errors.bio}</p>}
+              {errors.bio && <p className="text-red-500 text-xs font-bold mt-1">{errors.bio}</p>}
             </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-medium py-3 rounded-xl flex items-center justify-center transition-colors mt-8"
+            className="w-full bg-[#6D28D9] hover:bg-[#5B21B6] text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-purple-600/20 flex items-center justify-center transition-all mt-4"
           >
             {isLoading ? 'Saving...' : (
               <>

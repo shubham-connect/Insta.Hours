@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { Settings, Camera, MapPin, Edit3, Wallet, Store, Check, X, ShieldCheck, Award } from 'lucide-react';
+import { Settings, Camera, MapPin, Edit3, Wallet, Store, Check, X, ShieldCheck, Award, HelpCircle, PhoneCall, MessageCircle } from 'lucide-react';
 
 export default function Profile() {
   const { userProfile, setUserProfile } = useAuth();
@@ -97,7 +97,7 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Right Column (2/3 width): About Me & Action Cards */}
+          {/* Right Column (2/3 width): About Me, Quick Actions & Support Section */}
           <div className="lg:col-span-2 space-y-6">
             
             {/* About Me Section */}
@@ -170,6 +170,42 @@ export default function Profile() {
                   <p className="text-base font-extrabold">My Gigs History</p>
                   <p className="text-xs text-orange-100">Completed jobs & employer ratings</p>
                 </div>
+              </div>
+            </div>
+
+            {/* CONTACT SUPPORT & HELPDESK SECTION */}
+            <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm space-y-4">
+              <div className="flex items-center gap-2 text-[#5B21B6]">
+                <HelpCircle className="w-5 h-5 text-purple-600" />
+                <h3 className="font-extrabold text-lg">Contact Support & Helpdesk</h3>
+              </div>
+
+              <p className="text-xs font-semibold text-gray-500">
+                Have questions about gig payments, skill score re-tests, or attendance issues? Our support team is available 24/7.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <button
+                  onClick={() => addToast('Opening Support Chat...', 'info')}
+                  className="p-4 bg-purple-50 hover:bg-purple-100 rounded-2xl border border-purple-100 flex items-center gap-3 transition-all text-left"
+                >
+                  <MessageCircle className="w-5 h-5 text-purple-700" />
+                  <div>
+                    <p className="font-extrabold text-xs text-purple-900">24/7 Live Support Chat</p>
+                    <p className="text-[10px] text-gray-500 font-semibold">Instant reply under 5 mins</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => addToast('Helpline: +91 1800-123-4567', 'info')}
+                  className="p-4 bg-orange-50 hover:bg-orange-100 rounded-2xl border border-orange-100 flex items-center gap-3 transition-all text-left"
+                >
+                  <PhoneCall className="w-5 h-5 text-orange-600" />
+                  <div>
+                    <p className="font-extrabold text-xs text-orange-900">Toll-Free Helpline</p>
+                    <p className="text-[10px] text-gray-500 font-semibold">1800-123-4567 (9 AM - 9 PM)</p>
+                  </div>
+                </button>
               </div>
             </div>
           </div>

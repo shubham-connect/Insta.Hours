@@ -1,9 +1,10 @@
 import React from 'react';
-import { Search, X, Filter, MapPin, Laptop, Layers, Code } from 'lucide-react';
+import { Search, X, Filter, MapPin, Laptop, Layers, Code, DollarSign } from 'lucide-react';
 import { LOCATIONS, WORK_MODES, ROLE_CATEGORIES, POPULAR_SKILLS } from '../utils/mockData';
 
-const FilterSidebar = ({ filters, onFilterChange }) => {
-  const jobTypes = ['All', 'Gig', 'Internship', 'Job'];
+const FilterSidebar = ({ filters, onFilterChange, hideOpportunityType = false, allowedOpportunityTypes = null }) => {
+  const allJobTypes = ['All', 'Gig', 'Internship', 'Job'];
+  const displayJobTypes = allowedOpportunityTypes ? ['All', ...allowedOpportunityTypes] : allJobTypes;
 
   const handleSearchChange = (e) => {
     onFilterChange({ ...filters, search: e.target.value });
@@ -27,6 +28,11 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
     onFilterChange({ ...filters, roleCategory: cat });
   };
 
+  const handlePayoutChange = (e) => {
+    const pay = e.target.value === 'All Payouts' ? null : e.target.value;
+    onFilterChange({ ...filters, payout: pay });
+  };
+
   const toggleSkill = (skill) => {
     const currentSkills = filters.skills || [];
     let updated;
@@ -45,12 +51,13 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
       location: null,
       workMode: null,
       roleCategory: null,
+      payout: null,
       skills: []
     });
   };
 
   const hasActiveFilters = Boolean(
-    filters.search || filters.type || filters.location || filters.workMode || filters.roleCategory || (filters.skills && filters.skills.length > 0)
+    filters.search || filters.type || filters.location || filters.workMode || filters.roleCategory || filters.payout || (filters.skills && filters.skills.length > 0)
   );
 
   return (
@@ -85,7 +92,32 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         </div>
       </div>
 
-      {/* 2. City / Location */}
+      {/* 2. Opportunity Type (Hidden on Gigs tab, Custom on Careers tab) */}
+      {!hideOpportunityType && (
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Opportunity Type</label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {displayJobTypes.map((type) => {
+              const isSelected = (filters.type === type) || (type === 'All' && !filters.type);
+              return (
+                <button
+                  key={type}
+                  onClick={() => handleTypeChange(type)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-center border ${
+                    isSelected 
+                      ? 'bg-orange-500 border-orange-500 text-white shadow-sm' 
+                      : 'bg-purple-50/50 border-purple-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700'
+                  }`}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. City / Location */}
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-purple-600" /> City / Location
@@ -101,7 +133,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         </select>
       </div>
 
-      {/* 3. Work Mode */}
+      {/* 4. Work Mode */}
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Laptop className="w-3.5 h-3.5 text-orange-500" /> Work Mode
@@ -126,7 +158,24 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         </div>
       </div>
 
-      {/* 4. Role Category */}
+      {/* 5. Payout Filter */}
+      <div>
+        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <DollarSign className="w-3.5 h-3.5 text-emerald-600" /> Pay / Payout Range
+        </label>
+        <select
+          value={filters.payout || 'All Payouts'}
+          onChange={handlePayoutChange}
+          className="w-full bg-purple-50/50 border border-purple-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-purple-600 cursor-pointer"
+        >
+          <option value="All Payouts" className="bg-white">All Payout Ranges</option>
+          <option value="Under ₹1,000" className="bg-white">Under ₹1,000</option>
+          <option value="₹1,000 - ₹5,000" className="bg-white">₹1,000 - ₹5,000</option>
+          <option value="Above ₹5,000" className="bg-white">Above ₹5,000 / month</option>
+        </select>
+      </div>
+
+      {/* 6. Role Category */}
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-purple-600" /> Role Category
@@ -142,30 +191,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         </select>
       </div>
 
-      {/* 5. Opportunity Type */}
-      <div>
-        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Opportunity Type</label>
-        <div className="grid grid-cols-2 gap-1.5">
-          {jobTypes.map((type) => {
-            const isSelected = (filters.type === type) || (type === 'All' && !filters.type);
-            return (
-              <button
-                key={type}
-                onClick={() => handleTypeChange(type)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-center border ${
-                  isSelected 
-                    ? 'bg-orange-500 border-orange-500 text-white shadow-sm' 
-                    : 'bg-purple-50/50 border-purple-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700'
-                }`}
-              >
-                {type}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 6. Filter by Required Skills */}
+      {/* 7. Required Skills */}
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Code className="w-3.5 h-3.5 text-purple-600" /> Required Skills

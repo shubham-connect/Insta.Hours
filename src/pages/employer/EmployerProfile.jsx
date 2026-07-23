@@ -1,13 +1,13 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { CheckCircle2, Star, Crown, ChevronRight, LogOut, Building2, Edit3, ShieldCheck, Mail, MapPin } from 'lucide-react';
+import { CheckCircle2, Star, Crown, ChevronRight, LogOut, Building2, Edit3, ShieldCheck, Mail, MapPin, HelpCircle, MessageSquare, PhoneCall } from 'lucide-react';
 
 export default function EmployerProfile() {
   const { userProfile, signOut } = useAuth();
   const { addToast } = useToast();
 
-  const name = userProfile?.name || 'TechNova Solutions';
+  const name = userProfile?.name || 'TechCorp Solutions';
   const category = userProfile?.category || 'Information Technology • 11-50 employees';
 
   return (
@@ -28,7 +28,6 @@ export default function EmployerProfile() {
           {/* Left Column (1/3 width): Main Profile Card */}
           <div className="lg:col-span-1 space-y-6">
             <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm text-center flex flex-col items-center space-y-4">
-              {/* Square Violet Logo with TN Initials */}
               <div className="w-24 h-24 rounded-3xl bg-[#6D28D9] text-white font-black text-3xl flex items-center justify-center shadow-lg shadow-purple-600/30">
                 TN
               </div>
@@ -84,13 +83,13 @@ export default function EmployerProfile() {
             </div>
           </div>
 
-          {/* Right Column (2/3 width): Detailed Settings & Action Options */}
+          {/* Right Column (2/3 width): About Company & Employer Support */}
           <div className="lg:col-span-2 space-y-6">
             
             {/* About Company Section */}
             <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm space-y-4">
               <div className="flex justify-between items-center border-b border-purple-50 pb-3">
-                <h3 className="font-extrabold text-lg text-[#5B21B6]">About TechNova Solutions</h3>
+                <h3 className="font-extrabold text-lg text-[#5B21B6]">About {name}</h3>
                 <button
                   onClick={() => addToast('Edit company description', 'info')}
                   className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1"
@@ -100,13 +99,13 @@ export default function EmployerProfile() {
               </div>
 
               <p className="text-sm font-semibold text-gray-600 leading-relaxed">
-                TechNova Solutions is a fast-growing technology firm specializing in web software development, AI solutions, and digital marketing. We hire top student talent for short-term gigs, internships, and full-time engineering roles.
+                TechCorp Solutions is a fast-growing technology firm specializing in web software development, AI solutions, and digital marketing. We hire top student talent for short-term gigs, internships, and full-time engineering roles.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Hiring Contact Email</p>
-                  <p className="text-sm font-bold text-purple-900 mt-1">hiring@technova.io</p>
+                  <p className="text-sm font-bold text-purple-900 mt-1">hiring@techcorp.io</p>
                 </div>
 
                 <div className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100">
@@ -118,39 +117,53 @@ export default function EmployerProfile() {
               </div>
             </div>
 
-            {/* Quick Actions List */}
-            <div className="space-y-3">
-              <h3 className="font-extrabold text-lg text-[#5B21B6]">Account Actions</h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  onClick={() => addToast('Edit Company Profile modal', 'info')}
-                  className="app-card p-4 bg-white border border-purple-100 rounded-2xl flex items-center justify-between text-left hover:border-purple-300 transition-all shadow-sm"
-                >
-                  <span className="font-extrabold text-sm text-purple-900">Edit Company Profile</span>
-                  <ChevronRight className="w-5 h-5 text-purple-400" />
-                </button>
-
-                <button
-                  onClick={() => addToast('Hiring Preferences Modal', 'info')}
-                  className="app-card p-4 bg-white border border-purple-100 rounded-2xl flex items-center justify-between text-left hover:border-purple-300 transition-all shadow-sm"
-                >
-                  <span className="font-extrabold text-sm text-purple-900">Hiring Preferences</span>
-                  <ChevronRight className="w-5 h-5 text-purple-400" />
-                </button>
+            {/* EMPLOYER CONTACT SUPPORT SECTION */}
+            <div className="app-card p-6 bg-white border border-purple-100 rounded-3xl shadow-sm space-y-4">
+              <div className="flex items-center gap-2 text-[#5B21B6]">
+                <HelpCircle className="w-5 h-5 text-purple-600" />
+                <h3 className="font-extrabold text-lg">Contact Employer Support & Account Manager</h3>
               </div>
 
-              <button
-                onClick={() => {
-                  signOut();
-                  addToast('Logged Out', 'info');
-                }}
-                className="w-full app-card p-4 bg-purple-50/50 border border-purple-100 rounded-2xl flex items-center justify-between text-left hover:bg-red-50 hover:border-red-200 transition-all group"
-              >
-                <span className="font-extrabold text-sm text-orange-600 group-hover:text-red-600">Log Out of Employer Account</span>
-                <LogOut className="w-5 h-5 text-orange-500 group-hover:text-red-600" />
-              </button>
+              <p className="text-xs font-semibold text-gray-500">
+                Need help with escrow billing payouts, custom hiring pipelines, or dedicated talent sourcing? Reach out to your account manager.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <button
+                  onClick={() => addToast('Connecting to Dedicated Account Manager...', 'info')}
+                  className="p-4 bg-purple-50 hover:bg-purple-100 rounded-2xl border border-purple-100 flex items-center gap-3 transition-all text-left"
+                >
+                  <MessageSquare className="w-5 h-5 text-purple-700" />
+                  <div>
+                    <p className="font-extrabold text-xs text-purple-900">Dedicated Account Manager</p>
+                    <p className="text-[10px] text-gray-500 font-semibold">Priority 1-on-1 Support</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => addToast('Employer Support Helpline: +91 1800-888-9999', 'info')}
+                  className="p-4 bg-orange-50 hover:bg-orange-100 rounded-2xl border border-orange-100 flex items-center gap-3 transition-all text-left"
+                >
+                  <PhoneCall className="w-5 h-5 text-orange-600" />
+                  <div>
+                    <p className="font-extrabold text-xs text-orange-900">Employer Hotline</p>
+                    <p className="text-[10px] text-gray-500 font-semibold">1800-888-9999 (24/7 Helpline)</p>
+                  </div>
+                </button>
+              </div>
             </div>
+
+            {/* Account Logout */}
+            <button
+              onClick={() => {
+                signOut();
+                addToast('Logged Out', 'info');
+              }}
+              className="w-full app-card p-4 bg-purple-50/50 border border-purple-100 rounded-2xl flex items-center justify-between text-left hover:bg-red-50 hover:border-red-200 transition-all group"
+            >
+              <span className="font-extrabold text-sm text-orange-600 group-hover:text-red-600">Log Out of Employer Account</span>
+              <LogOut className="w-5 h-5 text-orange-500 group-hover:text-red-600" />
+            </button>
           </div>
         </div>
       </div>

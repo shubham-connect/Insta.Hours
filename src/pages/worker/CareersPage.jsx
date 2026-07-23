@@ -24,6 +24,7 @@ export default function CareersPage() {
     location: null,
     workMode: null,
     roleCategory: null,
+    payout: null,
     skills: []
   });
 
@@ -146,20 +147,14 @@ export default function CareersPage() {
   };
 
   const filteredJobs = jobs.filter(job => {
-    // 1. Keyword search
     const sLower = (filters.search || '').toLowerCase();
     const matchesSearch = !sLower || 
       job.title.toLowerCase().includes(sLower) || 
       job.description.toLowerCase().includes(sLower) ||
       (job.location && job.location.toLowerCase().includes(sLower));
 
-    // 2. Type (if specified in sidebar filter)
     const matchesType = !filters.type || job.type === filters.type;
-
-    // 3. Location
     const matchesLoc = !filters.location || (job.location && job.location.toLowerCase() === filters.location.toLowerCase());
-
-    // 4. Work Mode
     const matchesMode = !filters.workMode || job.workMode === filters.workMode;
 
     return matchesType && matchesSearch && matchesLoc && matchesMode;
@@ -169,18 +164,16 @@ export default function CareersPage() {
     <div className="min-h-screen bg-[#F8F7FC] py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 items-start">
         
-        {/* Left Column: Sticky Filter Sidebar (w-80) */}
+        {/* Left Column: Filter Sidebar (allowedOpportunityTypes set to ['Internship', 'Job']) */}
         <div className="w-full md:w-80 sticky top-20 flex-shrink-0">
-          <FilterSidebar filters={filters} onFilterChange={setFilters} />
+          <FilterSidebar filters={filters} onFilterChange={setFilters} allowedOpportunityTypes={['Internship', 'Job']} />
         </div>
 
         {/* Right Column: Hero Banner + Career Launchpad Content */}
         <div className="flex-1 w-full space-y-6">
           
-          {/* Banner Carousel */}
           <HeroBannerCarousel banners={careerBanners} />
 
-          {/* Section Heading */}
           <div className="flex justify-between items-center pb-2 border-b border-purple-100">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#5B21B6]">Career Launchpad</h1>
@@ -190,7 +183,6 @@ export default function CareersPage() {
             </div>
           </div>
 
-          {/* Career Cards List */}
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (

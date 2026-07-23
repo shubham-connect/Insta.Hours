@@ -18,11 +18,10 @@ import PulsePage from './pages/worker/PulsePage';
 import MyApplications from './pages/worker/MyApplications';
 import Profile from './pages/worker/Profile';
 
-// Employer Pages matching screenshots
+// Employer Pages
 import Dashboard from './pages/employer/Dashboard';
 import CreateJob from './pages/employer/CreateJob';
 import MyPostings from './pages/employer/MyPostings';
-import Candidates from './pages/employer/Candidates';
 import EmployerBilling from './pages/employer/EmployerBilling';
 import EmployerProfile from './pages/employer/EmployerProfile';
 
@@ -41,7 +40,6 @@ function App() {
     );
   }
 
-  // Determine root redirect
   const getRootRedirect = () => {
     if (!user) return '/login';
     if (!userProfile) return '/onboarding';
@@ -76,12 +74,10 @@ function App() {
       <Route path="/profile" element={<ProtectedRoute role="worker">{renderWorkerLayout(<Profile />)}</ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute role="worker">{renderWorkerLayout(<MyApplications />)}</ProtectedRoute>} />
 
-      {/* Employer Tab Routes matching screenshots */}
+      {/* 4 Employer Tab Routes */}
       <Route path="/employer" element={<ProtectedRoute role="employer">{renderEmployerLayout(<Dashboard />)}</ProtectedRoute>} />
       <Route path="/employer/create" element={<ProtectedRoute role="employer">{renderEmployerLayout(<CreateJob />)}</ProtectedRoute>} />
       <Route path="/employer/postings" element={<ProtectedRoute role="employer">{renderEmployerLayout(<MyPostings />)}</ProtectedRoute>} />
-      <Route path="/employer/candidates" element={<ProtectedRoute role="employer">{renderEmployerLayout(<Candidates />)}</ProtectedRoute>} />
-      <Route path="/employer/candidates/:jobId" element={<ProtectedRoute role="employer">{renderEmployerLayout(<Candidates />)}</ProtectedRoute>} />
       <Route path="/employer/billing" element={<ProtectedRoute role="employer">{renderEmployerLayout(<EmployerBilling />)}</ProtectedRoute>} />
       <Route path="/employer/profile" element={<ProtectedRoute role="employer">{renderEmployerLayout(<EmployerProfile />)}</ProtectedRoute>} />
 
